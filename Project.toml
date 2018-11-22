@@ -1,0 +1,6 @@
+authors = ["Jan Strube <jan.strube@gmail.com>"]
+name = "EventShapes"
+uuid = "4718d37f-a331-5933-90b6-cc82a8d8c9c3"
+version = "0.1.0"
+
+[deps]
