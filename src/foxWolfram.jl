@@ -1,5 +1,5 @@
-function foxWolframMoments(particles)
-    entries = length(particles)
+function foxWolframMoments(particleArray)
+    entries = length(particleArray)
     h0 = 0.0
     hd = 0.0
     # init
@@ -12,19 +12,10 @@ function foxWolframMoments(particles)
         println(stderr, "foxWolframMoments: Not enough entries")
         return [-1., -1., -1., -1.]
     end 
-    particleArray = Vector{SVector{4, Float64}}(undef, entries)
-	# copy all particles into an array and calculate h0 and hd
-    @inbounds for i in 1:entries
-        p = particles[i]
-	    momentum = getMomentum(p)
-	    magsquared = sum(momentum.^2)
-        particleArray[i] = SVector{4, Float64}(momentum[1], momentum[2], momentum[3], sqrt(magsquared))
-	    h0 += particleArray[i][4]
-	    hd += magsquared
-	end
-	h0 = h0*h0 # square it
 	# now do the moments
 	@inbounds for i = 1:entries-1
+	    h0 += particleArray[i][4]
+	    hd += sum(particleArray[i][1:3].^2)
 	    @inbounds for j = i+1:entries
     		ptemp = particleArray[i][4]*particleArray[j][4]
 	    	cosθ = (particleArray[i][1]*particleArray[j][1] +
@@ -37,10 +28,13 @@ function foxWolframMoments(particles)
 		    h40 += ptemp*(4.375*cosθ^4 - 3.75*cosθ^2 + 0.375)
         end
     end
+	h0 += particleArray[entries][4]
+	hd += sum(particleArray[entries][1:3].^2)
+	h0 = h0*h0 # square it
 	# normalize the moments
 	h10 = (hd + 2*h10) / h0
 	h20 = (hd + 2*h20) / h0
 	h30 = (hd + 2*h30) / h0
     h40 = (hd + 2*h40) / h0
-    return [h10, h20, h30, h40] 
+    return (h10, h20, h30, h40)
 end

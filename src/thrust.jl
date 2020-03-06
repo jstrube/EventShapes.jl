@@ -7,9 +7,8 @@ function CrossProduct(v, i, j, result)
     return 0
 end
 
-function Thrust(particles)
-    entries = length(particles)
-    particleArray = Vector{SVector{4, Float64}}(undef, entries)
+function Thrust(particleArray)
+    entries = length(particleArray)
     PartVector = MVector{4, Float64}(0., 0., 0., 0.)
     RefVector = MVector{4, Float64}(0., 0., 0., 0.)
     SumVector = MVector{4, Float64}(0., 0., 0., 0.)
@@ -19,12 +18,8 @@ function Thrust(particles)
         println(stderr, "Thrust : Not enough entries")
         return -1.0
     end
-    # copy all particles into an array and start calcualting the thrust
+    # start calcualting the thrust
     @inbounds for i in 1:entries
-        p = particles[i]
-        momentum = getMomentum(p)
-        magsquared = sum(momentum.^2)
-        particleArray[i] = SVector{4, Float64}(momentum[1], momentum[2], momentum[3], sqrt(magsquared)) # store the abs(p)
         SumVector += particleArray[i]
     end
     
@@ -33,12 +28,14 @@ function Thrust(particles)
         @inbounds for j = i+1:entries
             CrossProduct(particleArray, i, j, RefVector)
 			RefVector ./= sqrt(sum(RefVector.^2))
-			PartVector =0;
+			PartVector .*= 0
             # Add all momenta with sign; two choices for each reference particle.
             @inbounds for k = 1:entries 
                 if k != i && k != j 
                     dotProduct = particleArray[k] ⋅ RefVector
-                    PartVector += sign(dotProduct) * particleArray[k]
+					#print(sign(dotProduct), "\t", particleArray[k], "\t", PartVector)
+					#println(sign(dotProduct) * particleArray[k])
+                    PartVector .+= sign(dotProduct) * particleArray[k]
                 end
             end
             c1 = 0
